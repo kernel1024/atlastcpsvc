@@ -143,6 +143,7 @@ namespace AtlasTCPSvcApp
             if (srv != null) return;
             srv = new Server(this, srvIP, srvPort, ACL);
             tmrChecker.Start();
+            tmrTranWakeup.Start();
             AddLog("Initialized. Waiting for incoming connections.");
         }
 
@@ -150,6 +151,7 @@ namespace AtlasTCPSvcApp
         {
             if (srv == null) return;
             tmrChecker.Stop();
+            tmrTranWakeup.Stop();
             srv.terminateListener();
 
             if (srv.isRestartNeeded())
@@ -253,6 +255,17 @@ namespace AtlasTCPSvcApp
             if (!firstHidden)
                 Hide();
             firstHidden = true;
+        }
+
+        private void tmrTranWakeup_Tick(object sender, EventArgs e)
+        {
+            if (srv == null) return;
+            if (!srv.isRestartNeeded())
+            {
+                string src = "新幹線は、JRグループの東日本旅客鉄道、東海旅客鉄道、西日本旅客鉄道、九州旅客鉄道が運営する日本の高速鉄道である。";
+                string dst;
+                srv.AuxTranslate("JE", src, out dst);
+            }
         }
     }
 }

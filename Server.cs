@@ -77,6 +77,24 @@ namespace AtlasTCPSvcApp
             tcpListener.Stop();
         }
 
+        public void AuxTranslate(string dir, string src, out string dst)
+        {
+            TranEngine eng = null;
+            dst = "ERR";
+            try
+            {
+                    eng = new TranEngine();
+                    if (eng.initEngine())
+                    {
+                        eng.setDirection(dir);
+                        eng.translatePar(src, out dst);
+                    }
+            }
+            catch
+            {
+            }
+        }
+
         private void HandleClientComm(object client)
         {
             TcpClient tcpClient = (TcpClient)client;
