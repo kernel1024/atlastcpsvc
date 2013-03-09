@@ -58,7 +58,11 @@ namespace AtlasTCPSvcApp
             // reference counter == 0, close engine
             lock (engineLocker)
             {
-                engine.CallTerm();
+                try
+                {
+                    engine.CallTerm();
+                }
+                catch { }
             }
         }
 
