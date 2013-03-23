@@ -100,6 +100,7 @@ namespace AtlasTCPSvcApp
             TcpClient tcpClient = (TcpClient)client;
 
             form.AddLog("Client connected");
+            form.tmrTranWakeupStop();
 
             NetworkStream clientStream = tcpClient.GetStream();
             StreamReader sr = new StreamReader(clientStream, Encoding.ASCII);
@@ -189,6 +190,8 @@ namespace AtlasTCPSvcApp
             }
 
             form.AddLog("Client disconnected");
+            if (TranEngine.getRefCnt() == 0)
+                form.tmrTranWakeupStart();
 
             tcpClient.Close();
             GC.Collect();

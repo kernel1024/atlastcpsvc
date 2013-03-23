@@ -143,7 +143,6 @@ namespace AtlasTCPSvcApp
             if (srv != null) return;
             srv = new Server(this, srvIP, srvPort, ACL);
             tmrChecker.Start();
-            tmrTranWakeup.Start();
             AddLog("Initialized. Waiting for incoming connections.");
         }
 
@@ -266,6 +265,16 @@ namespace AtlasTCPSvcApp
                 string dst;
                 srv.AuxTranslate("JE", src, out dst);
             }
+        }
+
+        public void tmrTranWakeupStart()
+        {
+            tmrTranWakeup.Start();
+        }
+
+        public void tmrTranWakeupStop()
+        {
+            tmrTranWakeup.Stop();
         }
     }
 }
