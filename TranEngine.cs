@@ -141,5 +141,10 @@ namespace AtlasTCPSvcApp
             res = s;
             return true;
         }
+
+        public static int getRefCnt()
+        {
+            return refCnt;
+        }
     }
 }
