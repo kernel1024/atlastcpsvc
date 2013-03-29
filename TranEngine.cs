@@ -4,7 +4,7 @@ using System.Text;
 using AtlasServer_ProV14;
 using Atlct_ProV14;
 
-namespace AtlasTCPSvcApp
+namespace AtlasTCPSvc
 {
     class TranEngine
     {

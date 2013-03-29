@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Web;
 
-namespace AtlasTCPSvcApp
+namespace AtlasTCPSvc
 {
     class Server
     {
@@ -15,14 +15,14 @@ namespace AtlasTCPSvcApp
         Thread listenerThread;
         bool listening;
         bool needRestart;
-        List<IPAddress> ACL;
-        MainForm form;
         int connectionCount;
+        WaitTimerControl tmrControl;
+        AtlasServiceControl svcControl;
 
-        public Server(MainForm mform, IPAddress ip, int port, List<IPAddress> aACL)
+        public Server(WaitTimerControl timerControl, AtlasServiceControl serviceControl, IPAddress ip, int port)
         {
-            form = mform;
-            ACL = aACL;
+            tmrControl = timerControl;
+            svcControl = serviceControl;
             connectionCount = 0;
             listening = true;
             needRestart = false;
@@ -30,6 +30,7 @@ namespace AtlasTCPSvcApp
             listenerThread = new Thread(new ThreadStart(ListenForClients));
             listenerThread.Start();
         }
+
         ~Server()
         {
             terminateListener();
@@ -64,15 +65,6 @@ namespace AtlasTCPSvcApp
                     continue;
                 }
                 TcpClient client = tcpListener.AcceptTcpClient();
-                IPEndPoint ipe = (IPEndPoint)client.Client.RemoteEndPoint;
-                if (!ACL.Contains(ipe.Address))
-                {
-                    form.AddLog("Not authorized IP trying to access: " + ipe.ToString());
-                    client.Client.Disconnect(false);
-                    client.Close();
-                    continue;
-                }
-
                 Thread clientThread = new Thread(new ParameterizedThreadStart(HandleClientComm));
                 clientThread.Start(client);
             }
@@ -97,8 +89,7 @@ namespace AtlasTCPSvcApp
         {
             TcpClient tcpClient = (TcpClient)client;
 
-            form.AddLog("Client connected");
-            form.tmrTranWakeupStop();
+            tmrControl(false);
             Interlocked.Increment(ref connectionCount);
 
             NetworkStream clientStream = tcpClient.GetStream();
@@ -178,13 +169,12 @@ namespace AtlasTCPSvcApp
                 }
             }
 
-            form.AddLog("Client disconnected");
             Interlocked.Decrement(ref connectionCount);
             if (Interlocked.Equals(connectionCount, 0))
-            {
-                form.AddLog("All clients disconnected");
-                form.tmrTranWakeupStart();
-            }
+                tmrControl(true);
+
+            if (needRestart)
+                svcControl(AtlasServiceOpcode.Restart);
 
             tcpClient.Close();
             GC.Collect();
