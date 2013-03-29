@@ -17,11 +17,13 @@ namespace AtlasTCPSvcApp
         bool needRestart;
         List<IPAddress> ACL;
         MainForm form;
+        int connectionCount;
 
         public Server(MainForm mform, IPAddress ip, int port, List<IPAddress> aACL)
         {
             form = mform;
             ACL = aACL;
+            connectionCount = 0;
             listening = true;
             needRestart = false;
             tcpListener = new TcpListener(ip, port);
@@ -77,18 +79,14 @@ namespace AtlasTCPSvcApp
             tcpListener.Stop();
         }
 
-        public void AuxTranslate(string dir, string src, out string dst)
+        public void AuxTranslate(string src, out string dst)
         {
             TranEngine eng = null;
             dst = "ERR";
             try
             {
                     eng = new TranEngine();
-                    if (eng.initEngine())
-                    {
-                        eng.setDirection(dir);
-                        eng.translatePar(src, out dst);
-                    }
+                    eng.translatePar(src, out dst);
             }
             catch
             {
@@ -101,6 +99,7 @@ namespace AtlasTCPSvcApp
 
             form.AddLog("Client connected");
             form.tmrTranWakeupStop();
+            Interlocked.Increment(ref connectionCount);
 
             NetworkStream clientStream = tcpClient.GetStream();
             StreamReader sr = new StreamReader(clientStream, Encoding.ASCII);
@@ -130,26 +129,16 @@ namespace AtlasTCPSvcApp
                     if (s == null) break;
                     if (s == "INIT")
                     {
+                        engInited = true;
                         eng = new TranEngine();
-                        if (!eng.initEngine())
-                            sw.WriteLine("ERR:CANT_INIT");
-                        else
-                        {
-                            engInited = true;
-                            sw.WriteLine("OK");
-                        }
+                        sw.WriteLine("OK");
                     }
                     else if (s.StartsWith("DIR:"))
                     {
-                        if (!engInited)
-                            sw.WriteLine("ERR:NEED_INIT");
-                        else
-                        {
-                            s = s.Replace("DIR:", "");
-                            s = s.ToUpper();
-                            eng.setDirection(s);
-                            sw.WriteLine("OK");
-                        }
+                        s = s.Replace("DIR:", "");
+                        s = s.ToUpper();
+                        eng.setDirection(s);
+                        sw.WriteLine("OK");
                     }
                     else if (s.StartsWith("FIN"))
                     {
@@ -190,8 +179,12 @@ namespace AtlasTCPSvcApp
             }
 
             form.AddLog("Client disconnected");
-            if (TranEngine.getRefCnt() == 0)
+            Interlocked.Decrement(ref connectionCount);
+            if (Interlocked.Equals(connectionCount, 0))
+            {
+                form.AddLog("All clients disconnected");
                 form.tmrTranWakeupStart();
+            }
 
             tcpClient.Close();
             GC.Collect();
