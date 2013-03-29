@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("AtlasTCPSvc2")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyTitle("AtlasTCPSvc3")]
+[assembly: AssemblyDescription("Atlas TCP service v3")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Medical Mechanica corp.")]
-[assembly: AssemblyProduct("AtlasTCPSvc2")]
-[assembly: AssemblyCopyright("Copyright © Medical Mechanica corp. 2012-2013")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("AtlasTCPSvc")]
+[assembly: AssemblyCopyright("Copyright by kernelonline 2012-2013")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("ec360340-b027-4b59-b961-27ceb02497b8")]
+[assembly: Guid("41dcc7b7-470d-4e62-8db7-d1faf7768244")]
 
 // Version information for an assembly consists of the following four values:
 //
@@ -32,5 +32,5 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("2.0.0.0")]
+[assembly: AssemblyVersion("3.0.0.0")]
+[assembly: AssemblyFileVersion("3.0.0.0")]
