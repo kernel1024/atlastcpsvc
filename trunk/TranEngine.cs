@@ -10,35 +10,15 @@ namespace AtlasTCPSvcApp
     {
         // Multithreaded blocking interface to single-threaded ATLAS
 
-        static private TextTransClass engine;
+        static private TextTransClass engine = null;
+        static short oldTranDirection = 0;
 
         static readonly object slipLocker = new object();
-        static readonly object refLocker = new object();
         static readonly object engineLocker = new object();
 
         static int slippedCnt = 0;
-        static int refCnt = 0;
 
         short tranDirection = 0;
-
-        public TranEngine()
-        {
-            lock (refLocker)
-            {
-                if (refCnt == 0)  // Initialize engine if this is first instance
-                {
-                    lock (engineLocker)
-                    {
-                        engine = null;
-                    }
-                }
-            }
-        }
-
-        ~TranEngine()
-        {
-            shutdownEngine();
-        }
 
         public int getSlippedCnt()
         {
@@ -48,14 +28,8 @@ namespace AtlasTCPSvcApp
             }
         }
 
-        private void shutdownEngine()
+        static private void shutdownEngine()
         {
-            lock (refLocker)
-            {
-                refCnt--;
-                if (refCnt > 0) return;
-            }
-            // reference counter == 0, close engine
             lock (engineLocker)
             {
                 try
@@ -66,28 +40,17 @@ namespace AtlasTCPSvcApp
             }
         }
 
-        public bool initEngine()
+        static public bool initEngine()
         {
-            bool needInit = false;
             bool initSuccess = false;
-
-            lock (refLocker)
-            {
-                needInit = (refCnt == 0);
-            }
             lock (engineLocker)
             {
-                if (needInit)
-                {
-                    engine = new TextTransClass();
-                    initSuccess = (engine.CallInit() == 0);
-                }
+                engine = new TextTransClass();
+                initSuccess = (engine.CallInit() == 0);
+                if (!initSuccess)
+                    engine = null;
             }
-            lock (refLocker)
-            {
-                if (refCnt > 0 || initSuccess) refCnt++;
-                return (refCnt > 0);
-            }
+            return initSuccess;
         }
 
         public void setDirection(string lang)
@@ -105,16 +68,17 @@ namespace AtlasTCPSvcApp
             char[] spcs = { '\r', '\n', ' ' };
             string s = "";
 
-            lock (refLocker)
-            {
-                if (refCnt == 0) return false;
-            }
             lock (engineLocker)
             {
                 try
                 {
-                    engine.SetMode_Direction(tranDirection);
-                    s = engine.CallTextTranslate(src, ref dic, ref errc);
+                    if (engine != null)
+                    {
+                        if (oldTranDirection != tranDirection)
+                            engine.SetMode_Direction(tranDirection);
+                        oldTranDirection = tranDirection;
+                        s = engine.CallTextTranslate(src, ref dic, ref errc);
+                    }
                     if (s == null) s = "";
                     else s = s.Trim(spcs);
                 }
@@ -140,11 +104,6 @@ namespace AtlasTCPSvcApp
             }
             res = s;
             return true;
-        }
-
-        public static int getRefCnt()
-        {
-            return refCnt;
         }
     }
 }

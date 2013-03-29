@@ -40,6 +40,9 @@ namespace AtlasTCPSvcApp
             trayIcon.Visible = true;
 
             ReadSettings();
+            if (!AtlasTCPSvcApp.TranEngine.initEngine())
+                MessageBox.Show("Unable to initialize ATLAS.", "AtlasTCPSvc");
+
             StartServer();
         }
 
@@ -263,7 +266,7 @@ namespace AtlasTCPSvcApp
             {
                 string src = "新幹線は、JRグループの東日本旅客鉄道、東海旅客鉄道、西日本旅客鉄道、九州旅客鉄道が運営する日本の高速鉄道である。";
                 string dst;
-                srv.AuxTranslate("JE", src, out dst);
+                srv.AuxTranslate(src, out dst);
             }
         }
 
