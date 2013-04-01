@@ -53,6 +53,8 @@ namespace AtlasTCPSvc
                 this.EventLog.WriteEntry(ex.Message, EventLogEntryType.Error);
                 ExitCode = 1;
             }
+            if (ExitCode != 0)
+                Environment.Exit(ExitCode);
         }
 
         public void StartServer(int srvPort)
