@@ -4,6 +4,9 @@ using System.Diagnostics;
 using System.Linq;
 using System.ServiceProcess;
 using System.Threading;
+using System.IO;
+using Microsoft.Win32;
+using System.Collections.Generic;
 
 namespace AtlasTCPSvc
 {
@@ -23,6 +26,29 @@ namespace AtlasTCPSvc
 
         protected override void OnStart(string[] args)
         {
+            string certFilename = "";
+            try
+            {
+                certFilename = AppDomain.CurrentDomain.BaseDirectory;
+                if (!certFilename.EndsWith("\\")) certFilename += "\\";
+                string[] files = Directory.GetFiles(certFilename, "*.pfx");
+                if (files.Length > 0)
+                    certFilename = files.First();
+                else
+                    certFilename = "";
+            } catch (Exception e) {
+                certFilename = "";
+                this.EventLog.WriteEntry("Catched exception while SSL certificate searching: "+e.Message,EventLogEntryType.Error);
+            }
+
+            if (certFilename.Length == 0)
+            {
+                this.EventLog.WriteEntry("Unable to find SSL certificate in " + AppDomain.CurrentDomain.BaseDirectory + " directory, terminating.",
+                    EventLogEntryType.Warning);
+                Stop();
+                return;
+            }
+
             int srvPort = 18000;
             try
             {
@@ -32,7 +58,7 @@ namespace AtlasTCPSvc
                 if (!AtlasTCPSvc.TranEngine.initEngine())
                     throw new AtlasException("ATLAS not initialized.");
 
-                StartServer(srvPort);
+                StartServer(srvPort, certFilename);
             }
             catch (Exception ex)
             {
@@ -57,12 +83,30 @@ namespace AtlasTCPSvc
                 Environment.Exit(ExitCode);
         }
 
-        public void StartServer(int srvPort)
+        public void StartServer(int srvPort, string certFilename)
         {
             if (server != null) return;
             IPAddress srvIP;
             IPAddress.TryParse("0.0.0.0", out srvIP);
-            server = new Server(tmrControl, svcControl, srvIP, srvPort);
+            server = new Server(messageLogger, tokenAuthenticator, tmrControl, svcControl, srvIP, srvPort, certFilename);
+        }
+
+        public int messageLogger(string msg)
+        {
+            this.EventLog.WriteEntry(msg, EventLogEntryType.Error);
+            return 0;
+        }
+
+        public bool tokenAuthenticator(string token)
+        {
+            RegistryKey pkey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\AtlasTCPSvc");
+            List<string> tokenList = new List<string>((string[])pkey.GetValue("TokenList", new string[] { }));
+            pkey.Close();
+
+            if (tokenList.Contains(token))
+                return true;
+
+            return false;
         }
 
         public void StopServer()
