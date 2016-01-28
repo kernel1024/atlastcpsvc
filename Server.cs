@@ -115,7 +115,7 @@ namespace AtlasTCPSvc
 
             try
             {
-                clientStream.AuthenticateAsServer(sslCert, false, SslProtocols.Default, true);
+                clientStream.AuthenticateAsServer(sslCert, false, SslProtocols.Tls12, true);
 
                 StreamReader sr = new StreamReader(clientStream, Encoding.ASCII);
                 StreamWriter sw = new StreamWriter(clientStream, Encoding.ASCII);

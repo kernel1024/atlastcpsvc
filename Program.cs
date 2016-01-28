@@ -18,7 +18,16 @@ namespace AtlasTCPSvc
         {
             if (System.Environment.UserInteractive)
             {
-                RegistryKey pkey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\AtlasTCPSvc");
+                RegistryKey pkey = null;
+                try
+                {
+                    pkey = Registry.LocalMachine.CreateSubKey("SOFTWARE\\AtlasTCPSvc");
+                }
+                catch (Exception e)
+                {
+                    MessageBox.Show("This program must be launched from administrative or system account.\r\n\r\n" + e.Message, "AtlasTCPSvc");
+                    return;
+                }
                 List<string> tokenList = new List<string>((string[])pkey.GetValue("TokenList", new string[] {}));
 
                 if (args.Length > 0)
