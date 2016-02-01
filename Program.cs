@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.ServiceProcess;
 using System.Configuration.Install;
 using System.Reflection;
-using System.Windows.Forms;
 using Microsoft.Win32;
 using System.Text.RegularExpressions;
 
@@ -14,10 +13,16 @@ namespace AtlasTCPSvc
         /// <summary>
         /// The main entry point for the application.
         /// </summary>
+        static void showMessage(string msg)
+        {
+            Console.WriteLine(msg);
+        }
+
         static void Main(string[] args)
         {
             if (System.Environment.UserInteractive)
             {
+                showMessage("\r\nATLAS TCP serivce, v" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\r\n");
                 RegistryKey pkey = null;
                 try
                 {
@@ -25,7 +30,7 @@ namespace AtlasTCPSvc
                 }
                 catch (Exception e)
                 {
-                    MessageBox.Show("This program must be launched from administrative or system account.\r\n\r\n" + e.Message, "AtlasTCPSvc");
+                    showMessage("This program must be launched from administrative or system account.\r\n\r\n" + e.Message);
                     return;
                 }
                 List<string> tokenList = new List<string>((string[])pkey.GetValue("TokenList", new string[] {}));
@@ -37,26 +42,26 @@ namespace AtlasTCPSvc
                         case "-install":
                             {
                                 ManagedInstallerClass.InstallHelper(new string[] { Assembly.GetExecutingAssembly().Location });
-                                MessageBox.Show("Service installed", "AtlasTCPSvc");
+                                showMessage("Service installed");
                                 break;
                             }
                         case "-uninstall":
                             {
                                 ManagedInstallerClass.InstallHelper(new string[] { "/u", Assembly.GetExecutingAssembly().Location });
-                                MessageBox.Show("Service uninstalled", "AtlasTCPSvc");
+                                showMessage("Service uninstalled");
                                 break;
                             }
                         case "-add":
                             {
                                 string token = args[1];
                                 if (token.Length < 10)
-                                    MessageBox.Show("Token must be at least 10 characters long.", "AtlasTCPSvc");
+                                    showMessage("Token must be at least 10 characters long.");
                                 else if (tokenList.Contains(token))
-                                    MessageBox.Show("This token is already registered.", "AtlasTCPSvc");
+                                    showMessage("This token is already registered.");
                                 else
                                 {
                                     tokenList.Add(token);
-                                    MessageBox.Show("Token added.", "AtlasTCPSvc");
+                                    showMessage("Token added.");
                                 }
                                 break;
                             }
@@ -64,8 +69,7 @@ namespace AtlasTCPSvc
                             {
                                 string msg = "Registered tokens (total " + tokenList.Count.ToString() + " entries):\n"
                                     + string.Join("\n", tokenList);
-                                Console.Write(msg);
-                                MessageBox.Show(msg, "AtlasTCPSvc");
+                                showMessage(msg);
                                 break;
                             }
                         case "-del":
@@ -74,10 +78,10 @@ namespace AtlasTCPSvc
                                 if (tokenList.Contains(token))
                                 {
                                     tokenList.Remove(token);
-                                    MessageBox.Show("Token removed.", "AtlasTCPSvc");
+                                    showMessage("Token removed.");
                                 }
                                 else
-                                    MessageBox.Show("Unable to find specified token.", "AtlasTCPSvc");
+                                    showMessage("Unable to find specified token.");
                                 break;
                             }
                     }
@@ -87,11 +91,11 @@ namespace AtlasTCPSvc
                 }
                 else
                 {
-                    MessageBox.Show("Usage: AtlasTCPSvc.exe -install -- for install system service\n" +
-                        "AtlasTCPSvc.exe -uninstall -- for uninstall service\n" +
-                        "AtlasTCPSvc.exe -add tokenID -- add auth token to database\n" +
-                        "AtlasTCPSvc.exe -del tokenID -- delete auth token from database\n" +
-                        "AtlasTCPSvc.exe -list -- list registered tokens", "AtlasTCPSvc");
+                    showMessage("Usage: AtlasTCPSvc.exe -install -- for install system service\r\n" +
+                        "AtlasTCPSvc.exe -uninstall -- for uninstall service\r\n" +
+                        "AtlasTCPSvc.exe -add tokenID -- add auth token to database\r\n" +
+                        "AtlasTCPSvc.exe -del tokenID -- delete auth token from database\r\n" +
+                        "AtlasTCPSvc.exe -list -- list registered tokens");
                 }
             } else {
                 ServiceBase[] ServicesToRun;
